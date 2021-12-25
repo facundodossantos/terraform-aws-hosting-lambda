@@ -90,6 +90,33 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
     }
   }
 
+  dynamic "origin" {
+    for_each = toset(var.cf_custom_origins)
+    content {
+      origin_id = format("CustomTFOrigin-%04d", index(var.cf_custom_origins, origin.value) + 1)
+
+      domain_name = origin.value.domain_name
+
+      dynamic "custom_header" {
+        for_each = toset(origin.value.custom_headers)
+        content {
+          name  = custom_header.value.name
+          value = custom_header.value.value
+        }
+      }
+
+      custom_origin_config {
+        http_port  = origin.value.custom_origin_config.http_port
+        https_port = origin.value.custom_origin_config.https_port
+
+        origin_protocol_policy = origin.value.custom_origin_config.origin_protocol_policy
+        origin_ssl_protocols   = origin.value.custom_origin_config.origin_ssl_protocols
+
+        origin_read_timeout = origin.value.custom_origin_config.origin_read_timeout
+      }
+    }
+  }
+
   dynamic "ordered_cache_behavior" {
     for_each = local.has_lambda ? ["lambda_origin"] : []
     content {
@@ -131,6 +158,37 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
 
         cookies {
           forward = "none"
+        }
+      }
+    }
+  }
+
+  dynamic "ordered_cache_behavior" {
+    for_each = toset(var.cf_custom_origins)
+    content {
+      path_pattern = ordered_cache_behavior.value.path_pattern
+
+      allowed_methods = ordered_cache_behavior.value.allowed_methods
+      cached_methods  = ordered_cache_behavior.value.cached_methods
+
+      compress = ordered_cache_behavior.value.compress
+
+      min_ttl     = ordered_cache_behavior.value.min_ttl
+      default_ttl = ordered_cache_behavior.value.default_ttl
+      max_ttl     = ordered_cache_behavior.value.max_ttl
+
+      target_origin_id       = format("CustomTFOrigin-%04d", index(var.cf_custom_origins, ordered_cache_behavior.value) + 1)
+      viewer_protocol_policy = ordered_cache_behavior.value.viewer_protocol_policy
+
+      forwarded_values {
+        query_string            = ordered_cache_behavior.value.forwarded_values.query_string
+        query_string_cache_keys = length(ordered_cache_behavior.value.forwarded_values.query_string_cache_keys) > 0 ? ordered_cache_behavior.value.forwarded_values.query_string_cache_keys : null
+
+        headers = ordered_cache_behavior.value.forwarded_values.headers
+
+        cookies {
+          forward           = ordered_cache_behavior.value.forwarded_values.cookies.forward
+          whitelisted_names = ordered_cache_behavior.value.forwarded_values.cookies.forward == "whitelist" ? ordered_cache_behavior.value.forwarded_values.cookies.whitelisted_names : null
         }
       }
     }

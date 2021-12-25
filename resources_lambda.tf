@@ -75,8 +75,9 @@ resource "aws_lambda_function" "lambda" {
     variables = var.lambda_environment
   }
 
-  memory_size = var.lambda_memory_size
-  timeout     = var.lambda_timeout
+  architectures = length(var.lambda_architectures) > 0 ? var.lambda_architectures : null
+  memory_size   = var.lambda_memory_size
+  timeout       = var.lambda_timeout
 
   package_type = local.lambda_type == "container" ? "Image" : "Zip"
 

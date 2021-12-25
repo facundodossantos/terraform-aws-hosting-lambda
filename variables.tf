@@ -111,28 +111,54 @@ variable "cf_price_class" {
   description = "CloudFront Price Class"
   type        = string
   default     = "PriceClass_All"
-
-  validation {
-    condition     = contains(["PriceClass_100", "PriceClass_200", "PriceClass_All"], var.cf_price_class)
-    error_message = "Value must be either PriceClass_100, PriceClass_200, or PriceClass_All."
-  }
 }
 
 variable "cf_minimum_protocol_version" {
   description = "CloudFront SSL/TLS Minimum Protocol Version"
   type        = string
   default     = "TLSv1.2_2019"
-
-  validation {
-    condition     = contains(["SSLv3", "TLSv1", "TLSv1_2016", "TLSv1.1_2016", "TLSv1.2_2018", "TLSv1.2_2019"], var.cf_minimum_protocol_version)
-    error_message = "Value must be either SSLv3, TLSv1, TLSv1_2016, TLSv1.1_2016, TLSv1.2_2018, TLSv1.2_2019."
-  }
 }
 
 variable "cf_s3_secret_ua" {
   description = "Secret User-Agent used to prevent everyone but CloudFront from accessing the S3 Website Endpoint. If empty, a value will be automatically generated for you."
   type        = string
   default     = ""
+}
+
+variable "cf_custom_origins" {
+  description = "List of additional custom origins for which to selectively route traffic to."
+  type = list(object({
+    path_pattern           = string
+    allowed_methods        = list(string)
+    cached_methods         = list(string)
+    compress               = bool
+    min_ttl                = number
+    default_ttl            = number
+    max_ttl                = number
+    viewer_protocol_policy = string
+    forwarded_values = object({
+      cookies = object({
+        forward           = string
+        whitelisted_names = list(string)
+      })
+      headers                 = list(string)
+      query_string            = bool
+      query_string_cache_keys = list(string)
+    })
+    domain_name = string
+    custom_headers = list(object({
+      name  = string
+      value = string
+    }))
+    custom_origin_config = object({
+      http_port              = number
+      https_port             = number
+      origin_protocol_policy = string
+      origin_ssl_protocols   = list(string)
+      origin_read_timeout    = number
+    })
+  }))
+  default = []
 }
 
 # AWS Lambda Variables
@@ -152,6 +178,12 @@ variable "lambda_environment" {
   description = "Environment variables for the Lambda function."
   type        = map(string)
   default     = {}
+}
+
+variable "lambda_architectures" {
+  description = "Instruction set architecture for your Lambda function."
+  type        = list(string)
+  default     = []
 }
 
 variable "lambda_image_config" {
@@ -203,11 +235,6 @@ variable "lambda_log_retention" {
   description = "Amount of days the lambda logs are retained. Use -1 to leave the default value."
   type        = number
   default     = -1
-
-  validation {
-    condition     = contains([-1, 0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653], var.lambda_log_retention)
-    error_message = "Value must be one of the supported retention periods."
-  }
 }
 
 variable "lambda_timeout" {
@@ -246,6 +273,12 @@ variable "apigw_stage" {
   default     = "api"
 }
 
+variable "apigw_payload_format_version" {
+  description = "The format of the payload sent to the lambda."
+  type        = string
+  default     = "1.0"
+}
+
 variable "apigw_throttling_burst_limit" {
   description = "The throttling burst limit for the route."
   type        = number
@@ -256,7 +289,6 @@ variable "apigw_throttling_burst_limit" {
     error_message = "Value must be a positive integer."
   }
 }
-
 
 variable "apigw_throttling_rate_limit" {
   description = "The throttling rate limit for the route.."

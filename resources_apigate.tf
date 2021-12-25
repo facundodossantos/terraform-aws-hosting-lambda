@@ -22,6 +22,8 @@ resource "aws_apigatewayv2_integration" "lambda" {
   integration_method = "POST"
   integration_uri    = aws_lambda_function.lambda[count.index].invoke_arn
 
+  payload_format_version = var.apigw_payload_format_version
+
   timeout_milliseconds = var.lambda_timeout * 1000
 }
 
