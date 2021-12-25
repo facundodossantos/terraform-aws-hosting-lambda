@@ -1,0 +1,59 @@
+stages:
+  - lint
+  - upload
+
+lint:
+  stage: lint
+  image:
+    name: hashicorp/terraform:1.0.11
+    entrypoint: [/bin/sh, -c]
+  interruptible: true
+  script:
+    - terraform -version
+    - mkdir .temp
+    - >-
+      find . -type f \( -name '*.tf' -or -name '*.tfvars' \) | \
+        while read tffile; do
+          (cd "${tffile%/*}" && terraform fmt -check "${tffile##*/}" 1>/dev/null) || echo "$tffile"
+        done > '.temp/tflint-report.txt'
+    - >-
+      if [ -s '.temp/tflint-report.txt' ]; then
+        echo "Please run 'terraform fmt' on the following files: " 1>&2;
+        cat '.temp/tflint-report.txt' 1>&2;
+        exit 1;
+      else
+        echo "All files pass linting.";
+      fi
+    - terraform init -input=false -backend=false
+    - terraform validate
+
+upload:
+  stage: upload
+  image: curlimages/curl:latest
+  needs:
+    - job: lint
+      artifacts: false
+  interruptible: false
+  variables:
+    TERRAFORM_MODULE_NAME: terraform-aws-lightweight-hosting
+    TERRAFORM_MODULE_SYSTEM: aws
+  script:
+    - export TERRAFORM_MODULE_VERSION="${CI_COMMIT_TAG#v}"
+    - cd "${CI_PROJECT_DIR}"
+    - mkdir -p "${CI_PROJECT_DIR}/.temp"
+    - >-
+      tar cvzf "${CI_PROJECT_DIR}/.temp/${TERRAFORM_MODULE_NAME}-${TERRAFORM_MODULE_SYSTEM}-${TERRAFORM_MODULE_VERSION}.tgz" \
+        -C "${CI_PROJECT_DIR}" \
+        "--exclude=./.editorconfig" \
+        "--exclude=./.gitattributes" \
+        "--exclude=./.gitignore" \
+        "--exclude=./.gitlab-ci.yml" \
+        "--exclude=./.temp" \
+        "--exclude=./.git" \
+        .
+    - >-
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        --upload-file "${CI_PROJECT_DIR}/.temp/${TERRAFORM_MODULE_NAME}-${TERRAFORM_MODULE_SYSTEM}-${TERRAFORM_MODULE_VERSION}.tgz" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/terraform/modules/${TERRAFORM_MODULE_NAME}/${TERRAFORM_MODULE_SYSTEM}/${TERRAFORM_MODULE_VERSION}/file"
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+(\.[0-9]+)*$/'
