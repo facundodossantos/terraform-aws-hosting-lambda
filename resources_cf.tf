@@ -1,6 +1,6 @@
 locals {
-  s3_origin_id             = "S3Website-${local.resolved_bucket_name}"
-  lambda_origin_id         = "Lambda-${local.resolved_lambda_function_name}"
+  s3_origin_id             = var.cf_website_origin_id != "" ? var.cf_website_origin_id : "S3Website-${local.resolved_bucket_name}"
+  lambda_origin_id         = var.cf_lambda_origin_id != "" ? var.cf_lambda_origin_id : "Lambda-${local.resolved_lambda_function_name}"
   resolved_cf_s3_secret_ua = var.cf_s3_secret_ua != "" ? var.cf_s3_secret_ua : "CloudFront_${random_uuid.random_uuid[0].result}"
 }
 
@@ -34,24 +34,17 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
 
     compress = true
 
-    min_ttl     = var.cache_min_ttl
-    default_ttl = var.cache_default_ttl
-    max_ttl     = var.cache_max_ttl
-
     target_origin_id       = local.s3_origin_id
     viewer_protocol_policy = "redirect-to-https"
 
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
+    cache_policy_id            = var.cf_website_cache_policy_id
+    origin_request_policy_id   = length(var.cf_website_origin_request_policy_id) > 0 ? var.cf_website_origin_request_policy_id : null
+    response_headers_policy_id = length(var.cf_website_response_headers_policy_id) > 0 ? var.cf_website_response_headers_policy_id : null
   }
 
   origin {
     origin_id   = local.s3_origin_id
-    domain_name = aws_s3_bucket.bucket.website_endpoint
+    domain_name = aws_s3_bucket_website_configuration.bucket_website_configuration.website_endpoint
 
     custom_header {
       name  = "User-Agent"
@@ -93,7 +86,7 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
   dynamic "origin" {
     for_each = toset(var.cf_custom_origins)
     content {
-      origin_id = format("CustomTFOrigin-%04d", index(var.cf_custom_origins, origin.value) + 1)
+      origin_id = origin.value.origin_id
 
       domain_name = origin.value.domain_name
 
@@ -139,32 +132,17 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
 
       compress = true
 
-      min_ttl     = var.cache_min_ttl
-      default_ttl = var.cache_default_ttl
-      max_ttl     = var.cache_max_ttl
-
       target_origin_id       = local.lambda_origin_id
       viewer_protocol_policy = "redirect-to-https"
 
-      forwarded_values {
-        query_string = true
-
-        headers = [
-          "Access-Control-Request-Headers",
-          "Access-Control-Request-Method",
-          "Authorization",
-          "Origin",
-        ]
-
-        cookies {
-          forward = "none"
-        }
-      }
+      cache_policy_id            = var.cf_lambda_cache_policy_id
+      origin_request_policy_id   = length(var.cf_lambda_origin_request_policy_id) > 0 ? var.cf_lambda_origin_request_policy_id : null
+      response_headers_policy_id = length(var.cf_lambda_response_headers_policy_id) > 0 ? var.cf_lambda_response_headers_policy_id : null
     }
   }
 
   dynamic "ordered_cache_behavior" {
-    for_each = toset(var.cf_custom_origins)
+    for_each = toset(var.cf_custom_behaviors)
     content {
       path_pattern = ordered_cache_behavior.value.path_pattern
 
@@ -173,24 +151,12 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
 
       compress = ordered_cache_behavior.value.compress
 
-      min_ttl     = ordered_cache_behavior.value.min_ttl
-      default_ttl = ordered_cache_behavior.value.default_ttl
-      max_ttl     = ordered_cache_behavior.value.max_ttl
-
-      target_origin_id       = format("CustomTFOrigin-%04d", index(var.cf_custom_origins, ordered_cache_behavior.value) + 1)
+      target_origin_id       = ordered_cache_behavior.value.target_origin_id
       viewer_protocol_policy = ordered_cache_behavior.value.viewer_protocol_policy
 
-      forwarded_values {
-        query_string            = ordered_cache_behavior.value.forwarded_values.query_string
-        query_string_cache_keys = length(ordered_cache_behavior.value.forwarded_values.query_string_cache_keys) > 0 ? ordered_cache_behavior.value.forwarded_values.query_string_cache_keys : null
-
-        headers = ordered_cache_behavior.value.forwarded_values.headers
-
-        cookies {
-          forward           = ordered_cache_behavior.value.forwarded_values.cookies.forward
-          whitelisted_names = ordered_cache_behavior.value.forwarded_values.cookies.forward == "whitelist" ? ordered_cache_behavior.value.forwarded_values.cookies.whitelisted_names : null
-        }
-      }
+      cache_policy_id            = ordered_cache_behavior.value.cache_policy_id
+      origin_request_policy_id   = length(ordered_cache_behavior.value.origin_request_policy_id) > 0 ? ordered_cache_behavior.value.origin_request_policy_id : null
+      response_headers_policy_id = length(ordered_cache_behavior.value.response_headers_policy_id) > 0 ? ordered_cache_behavior.value.response_headers_policy_id : null
     }
   }
 

@@ -23,10 +23,10 @@ If no lambda parameters are specified, no lambda will be deployed.
 ```tf
 module "static_hosting" {
   # Alternatively, you may use
-  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v2.0.0"
+  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v3.0.0"
 
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "2.0.0"
+  version = "3.0.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -41,7 +41,7 @@ module "static_hosting" {
 ```tf
 module "static_hosting" {
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "2.0.0"
+  version = "3.0.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -69,11 +69,11 @@ module "static_hosting" {
 # Storage bucket for artifacts
 resource "aws_s3_bucket" "storage_bucket" {
   bucket = "example.org-artifacts"
-  acl    = "private"
+}
 
-  versioning {
-    enabled = false
-  }
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.storage_bucket.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_public_access_block" "bucket_public_access_block" {
@@ -84,6 +84,14 @@ resource "aws_s3_bucket_public_access_block" "bucket_public_access_block" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+resource "aws_s3_bucket_versioning" "bucket_versioning" {
+  bucket = aws_s3_bucket.storage_bucket.id
+
+  versioning_configuration {
+    status = "Suspended"
+  }
+}
 ```
 
 ## Requirements
@@ -91,15 +99,15 @@ resource "aws_s3_bucket_public_access_block" "bucket_public_access_block" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 3.61 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 4.3 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.1 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 3.61 |
-| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.1 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 4.3.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.1.0 |
 
 ## Modules
 
@@ -125,9 +133,12 @@ No modules.
 | [aws_route53_record.r53_aaaa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_route53_record.r53_domain_validation_record](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_s3_bucket.bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
-| [aws_s3_bucket_object.lambda_zip_package](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object) | resource |
+| [aws_s3_bucket_acl.bucket_acl](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_acl) | resource |
 | [aws_s3_bucket_policy.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
 | [aws_s3_bucket_public_access_block.bucket_public_access_block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
+| [aws_s3_bucket_versioning.bucket_versioning](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
+| [aws_s3_bucket_website_configuration.bucket_website_configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_website_configuration) | resource |
+| [aws_s3_object.lambda_zip_package](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
 | [random_uuid.random_uuid](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) | resource |
 | [aws_iam_policy_document.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.lambda_iam_assume_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
@@ -142,14 +153,20 @@ No modules.
 | <a name="input_apigw_throttling_burst_limit"></a> [apigw\_throttling\_burst\_limit](#input\_apigw\_throttling\_burst\_limit) | The throttling burst limit for the route. | `number` | `5` | no |
 | <a name="input_apigw_throttling_rate_limit"></a> [apigw\_throttling\_rate\_limit](#input\_apigw\_throttling\_rate\_limit) | The throttling rate limit for the route.. | `number` | `50` | no |
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | S3 bucket name used to deploy the website resources on. If left empty, defaults to using the first domain as name. | `string` | `""` | no |
-| <a name="input_cache_default_ttl"></a> [cache\_default\_ttl](#input\_cache\_default\_ttl) | Default time-to-live on the default cache behavior | `number` | `300` | no |
-| <a name="input_cache_max_ttl"></a> [cache\_max\_ttl](#input\_cache\_max\_ttl) | Maximum time-to-live on the default cache behavior | `number` | `604800` | no |
-| <a name="input_cache_min_ttl"></a> [cache\_min\_ttl](#input\_cache\_min\_ttl) | Minimum time-to-live on the default cache behavior | `number` | `0` | no |
-| <a name="input_cf_custom_origins"></a> [cf\_custom\_origins](#input\_cf\_custom\_origins) | List of additional custom origins for which to selectively route traffic to. | <pre>list(object({<br>    path_pattern           = string<br>    allowed_methods        = list(string)<br>    cached_methods         = list(string)<br>    compress               = bool<br>    min_ttl                = number<br>    default_ttl            = number<br>    max_ttl                = number<br>    viewer_protocol_policy = string<br>    forwarded_values = object({<br>      cookies = object({<br>        forward           = string<br>        whitelisted_names = list(string)<br>      })<br>      headers                 = list(string)<br>      query_string            = bool<br>      query_string_cache_keys = list(string)<br>    })<br>    domain_name = string<br>    custom_headers = list(object({<br>      name  = string<br>      value = string<br>    }))<br>    custom_origin_config = object({<br>      http_port              = number<br>      https_port             = number<br>      origin_protocol_policy = string<br>      origin_ssl_protocols   = list(string)<br>      origin_read_timeout    = number<br>    })<br>  }))</pre> | `[]` | no |
+| <a name="input_cf_custom_behaviors"></a> [cf\_custom\_behaviors](#input\_cf\_custom\_behaviors) | List of additional CloudFront behaviors. | <pre>list(object({<br>    target_origin_id           = string<br>    path_pattern               = string<br>    allowed_methods            = list(string)<br>    cached_methods             = list(string)<br>    compress                   = bool<br>    viewer_protocol_policy     = string<br>    cache_policy_id            = string<br>    origin_request_policy_id   = string<br>    response_headers_policy_id = string<br>  }))</pre> | `[]` | no |
+| <a name="input_cf_custom_origins"></a> [cf\_custom\_origins](#input\_cf\_custom\_origins) | List of additional custom origins for which to selectively route traffic to. | <pre>list(object({<br>    origin_id   = string<br>    domain_name = string<br>    custom_headers = list(object({<br>      name  = string<br>      value = string<br>    }))<br>    custom_origin_config = object({<br>      http_port              = number<br>      https_port             = number<br>      origin_protocol_policy = string<br>      origin_ssl_protocols   = list(string)<br>      origin_read_timeout    = number<br>    })<br>  }))</pre> | `[]` | no |
+| <a name="input_cf_lambda_cache_policy_id"></a> [cf\_lambda\_cache\_policy\_id](#input\_cf\_lambda\_cache\_policy\_id) | Cache Policy Id to apply to the Lambda cache behavior of the CloudFront distribution. Defaults to 'Managed-CachingDisabled' | `string` | `"4135ea2d-6df8-44a3-9df3-4b5a84be39ad"` | no |
+| <a name="input_cf_lambda_origin_id"></a> [cf\_lambda\_origin\_id](#input\_cf\_lambda\_origin\_id) | CloudFront origin id that will be used for the origin pointing to the API gateway. Will be automatically generated if empty. | `string` | `""` | no |
+| <a name="input_cf_lambda_origin_request_policy_id"></a> [cf\_lambda\_origin\_request\_policy\_id](#input\_cf\_lambda\_origin\_request\_policy\_id) | Origin Request Policy Id to apply to the Lambda cache behavior of the CloudFront distribution. Defaults to 'Managed-Elemental-MediaTailor-PersonalizedManifests'. Leave empty for none. | `string` | `"775133bc-15f2-49f9-abea-afb2e0bf67d2"` | no |
+| <a name="input_cf_lambda_response_headers_policy_id"></a> [cf\_lambda\_response\_headers\_policy\_id](#input\_cf\_lambda\_response\_headers\_policy\_id) | Response Headers Policy Id to apply to the Lambda cache behavior of the CloudFront distribution. Defaults to none. Leave empty for none. | `string` | `""` | no |
 | <a name="input_cf_logging_config"></a> [cf\_logging\_config](#input\_cf\_logging\_config) | Provides logging configuration for the CloudFront distribution | <pre>object({<br>    bucket          = string<br>    include_cookies = bool<br>    prefix          = string<br>  })</pre> | <pre>{<br>  "bucket": "",<br>  "include_cookies": false,<br>  "prefix": ""<br>}</pre> | no |
-| <a name="input_cf_minimum_protocol_version"></a> [cf\_minimum\_protocol\_version](#input\_cf\_minimum\_protocol\_version) | CloudFront SSL/TLS Minimum Protocol Version | `string` | `"TLSv1.2_2019"` | no |
+| <a name="input_cf_minimum_protocol_version"></a> [cf\_minimum\_protocol\_version](#input\_cf\_minimum\_protocol\_version) | CloudFront SSL/TLS Minimum Protocol Version | `string` | `"TLSv1.2_2021"` | no |
 | <a name="input_cf_price_class"></a> [cf\_price\_class](#input\_cf\_price\_class) | CloudFront Price Class | `string` | `"PriceClass_All"` | no |
 | <a name="input_cf_s3_secret_ua"></a> [cf\_s3\_secret\_ua](#input\_cf\_s3\_secret\_ua) | Secret User-Agent used to prevent everyone but CloudFront from accessing the S3 Website Endpoint. If empty, a value will be automatically generated for you. | `string` | `""` | no |
+| <a name="input_cf_website_cache_policy_id"></a> [cf\_website\_cache\_policy\_id](#input\_cf\_website\_cache\_policy\_id) | Cache Policy Id to apply to the default (S3 bucket) cache behavior of the CloudFront distribution. Defaults to 'Managed-CachingOptimized' | `string` | `"658327ea-f89d-4fab-a63d-7e88639e58f6"` | no |
+| <a name="input_cf_website_origin_id"></a> [cf\_website\_origin\_id](#input\_cf\_website\_origin\_id) | CloudFront origin id that will be used for the origin pointing to the API gateway. Will be automatically generated if empty. | `string` | `""` | no |
+| <a name="input_cf_website_origin_request_policy_id"></a> [cf\_website\_origin\_request\_policy\_id](#input\_cf\_website\_origin\_request\_policy\_id) | Origin Request Policy Id to apply to the default (S3 bucket) cache behavior of the CloudFront distribution. Defaults to 'Managed-CORS-S3Origin'. Leave empty for none. | `string` | `"88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"` | no |
+| <a name="input_cf_website_response_headers_policy_id"></a> [cf\_website\_response\_headers\_policy\_id](#input\_cf\_website\_response\_headers\_policy\_id) | Response Headers Policy Id to apply to the default (S3 bucket) cache behavior of the CloudFront distribution. Defaults to none. Leave empty for none. | `string` | `""` | no |
 | <a name="input_domains"></a> [domains](#input\_domains) | List of domains for which the CloudFront Distribution will be serving files. | `list(string)` | n/a | yes |
 | <a name="input_error_document"></a> [error\_document](#input\_error\_document) | Filename of the error document to be used in the bucket. | `string` | `"error.html"` | no |
 | <a name="input_index_document"></a> [index\_document](#input\_index\_document) | Filename of the index document to be used in the bucket. | `string` | `"index.html"` | no |

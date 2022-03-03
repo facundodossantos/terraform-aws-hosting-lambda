@@ -11,7 +11,7 @@ locals {
 }
 
 # Lambda Upload Package
-resource "aws_s3_bucket_object" "lambda_zip_package" {
+resource "aws_s3_object" "lambda_zip_package" {
   count = local.is_lambda_using_s3 ? 1 : 0
 
   bucket = var.lambda_package_config.s3_bucket
@@ -105,7 +105,7 @@ resource "aws_lambda_function" "lambda" {
   tags = var.tags
 
   depends_on = [
-    aws_s3_bucket_object.lambda_zip_package,
+    aws_s3_object.lambda_zip_package,
     aws_cloudwatch_log_group.cloudwatch_group,
     aws_iam_role.lambda_role
   ]

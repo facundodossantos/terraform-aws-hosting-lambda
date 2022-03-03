@@ -60,39 +60,6 @@ variable "is_ipv6_enabled" {
   default     = true
 }
 
-variable "cache_min_ttl" {
-  description = "Minimum time-to-live on the default cache behavior"
-  type        = number
-  default     = 0
-
-  validation {
-    condition     = var.cache_min_ttl >= 0 && floor(var.cache_min_ttl) == var.cache_min_ttl
-    error_message = "Value must be a positive integer."
-  }
-}
-
-variable "cache_default_ttl" {
-  description = "Default time-to-live on the default cache behavior"
-  type        = number
-  default     = 300
-
-  validation {
-    condition     = var.cache_default_ttl >= 0 && floor(var.cache_default_ttl) == var.cache_default_ttl
-    error_message = "Value must be a positive integer."
-  }
-}
-
-variable "cache_max_ttl" {
-  description = "Maximum time-to-live on the default cache behavior"
-  type        = number
-  default     = 604800
-
-  validation {
-    condition     = var.cache_max_ttl >= 0 && floor(var.cache_max_ttl) == var.cache_max_ttl
-    error_message = "Value must be a positive integer."
-  }
-}
-
 variable "cf_logging_config" {
   description = "Provides logging configuration for the CloudFront distribution"
   type = object({
@@ -116,7 +83,55 @@ variable "cf_price_class" {
 variable "cf_minimum_protocol_version" {
   description = "CloudFront SSL/TLS Minimum Protocol Version"
   type        = string
-  default     = "TLSv1.2_2019"
+  default     = "TLSv1.2_2021"
+}
+
+variable "cf_website_origin_id" {
+  description = "CloudFront origin id that will be used for the origin pointing to the API gateway. Will be automatically generated if empty."
+  type        = string
+  default     = ""
+}
+
+variable "cf_website_cache_policy_id" {
+  description = "Cache Policy Id to apply to the default (S3 bucket) cache behavior of the CloudFront distribution. Defaults to 'Managed-CachingOptimized'"
+  type        = string
+  default     = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+}
+
+variable "cf_website_origin_request_policy_id" {
+  description = "Origin Request Policy Id to apply to the default (S3 bucket) cache behavior of the CloudFront distribution. Defaults to 'Managed-CORS-S3Origin'. Leave empty for none."
+  type        = string
+  default     = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
+}
+
+variable "cf_website_response_headers_policy_id" {
+  description = "Response Headers Policy Id to apply to the default (S3 bucket) cache behavior of the CloudFront distribution. Defaults to none. Leave empty for none."
+  type        = string
+  default     = ""
+}
+
+variable "cf_lambda_origin_id" {
+  description = "CloudFront origin id that will be used for the origin pointing to the API gateway. Will be automatically generated if empty."
+  type        = string
+  default     = ""
+}
+
+variable "cf_lambda_cache_policy_id" {
+  description = "Cache Policy Id to apply to the Lambda cache behavior of the CloudFront distribution. Defaults to 'Managed-CachingDisabled'"
+  type        = string
+  default     = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+}
+
+variable "cf_lambda_origin_request_policy_id" {
+  description = "Origin Request Policy Id to apply to the Lambda cache behavior of the CloudFront distribution. Defaults to 'Managed-Elemental-MediaTailor-PersonalizedManifests'. Leave empty for none."
+  type        = string
+  default     = "775133bc-15f2-49f9-abea-afb2e0bf67d2"
+}
+
+variable "cf_lambda_response_headers_policy_id" {
+  description = "Response Headers Policy Id to apply to the Lambda cache behavior of the CloudFront distribution. Defaults to none. Leave empty for none."
+  type        = string
+  default     = ""
 }
 
 variable "cf_s3_secret_ua" {
@@ -128,23 +143,7 @@ variable "cf_s3_secret_ua" {
 variable "cf_custom_origins" {
   description = "List of additional custom origins for which to selectively route traffic to."
   type = list(object({
-    path_pattern           = string
-    allowed_methods        = list(string)
-    cached_methods         = list(string)
-    compress               = bool
-    min_ttl                = number
-    default_ttl            = number
-    max_ttl                = number
-    viewer_protocol_policy = string
-    forwarded_values = object({
-      cookies = object({
-        forward           = string
-        whitelisted_names = list(string)
-      })
-      headers                 = list(string)
-      query_string            = bool
-      query_string_cache_keys = list(string)
-    })
+    origin_id   = string
     domain_name = string
     custom_headers = list(object({
       name  = string
@@ -157,6 +156,22 @@ variable "cf_custom_origins" {
       origin_ssl_protocols   = list(string)
       origin_read_timeout    = number
     })
+  }))
+  default = []
+}
+
+variable "cf_custom_behaviors" {
+  description = "List of additional CloudFront behaviors."
+  type = list(object({
+    target_origin_id           = string
+    path_pattern               = string
+    allowed_methods            = list(string)
+    cached_methods             = list(string)
+    compress                   = bool
+    viewer_protocol_policy     = string
+    cache_policy_id            = string
+    origin_request_policy_id   = string
+    response_headers_policy_id = string
   }))
   default = []
 }

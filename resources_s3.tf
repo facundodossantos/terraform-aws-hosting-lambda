@@ -5,24 +5,13 @@ locals {
 # Bucket
 resource "aws_s3_bucket" "bucket" {
   bucket = local.resolved_bucket_name
-  acl    = "private"
-
-  website {
-    index_document = var.index_document
-    error_document = var.error_document
-  }
-
-  versioning {
-    enabled = false
-  }
 
   tags = var.tags
+}
 
-  lifecycle {
-    ignore_changes = [
-      website["routing_rules"],
-    ]
-  }
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_public_access_block" "bucket_public_access_block" {
@@ -32,6 +21,32 @@ resource "aws_s3_bucket_public_access_block" "bucket_public_access_block" {
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_versioning" "bucket_versioning" {
+  bucket = aws_s3_bucket.bucket.id
+
+  versioning_configuration {
+    status = "Suspended"
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "bucket_website_configuration" {
+  bucket = aws_s3_bucket.bucket.id
+
+  index_document {
+    suffix = var.index_document
+  }
+
+  error_document {
+    key = var.error_document
+  }
+
+  lifecycle {
+    ignore_changes = [
+      routing_rule,
+    ]
+  }
 }
 
 # Bucket Access Policy

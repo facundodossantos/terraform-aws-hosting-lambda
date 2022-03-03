@@ -70,6 +70,6 @@ output "s3_bucket_id" {
 
 output "s3_bucket_website_endpoint" {
   description = "The website endpoint associated with the S3 Bucket"
-  value       = aws_s3_bucket.bucket.website_endpoint
+  value       = aws_s3_bucket_website_configuration.bucket_website_configuration.website_endpoint
 }
 
