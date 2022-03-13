@@ -25,6 +25,12 @@ variable "bucket_name" {
   default     = ""
 }
 
+variable "bucket_force_destroy" {
+  description = "Allow Terraform to destroy the bucket even if there are objects within."
+  type        = bool
+  default     = false
+}
+
 variable "index_document" {
   description = "Filename of the index document to be used in the bucket."
   type        = string

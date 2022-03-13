@@ -23,10 +23,10 @@ If no lambda parameters are specified, no lambda will be deployed.
 ```tf
 module "static_hosting" {
   # Alternatively, you may use
-  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v3.0.0"
+  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v3.1.0"
 
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "3.0.0"
+  version = "3.1.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -41,7 +41,7 @@ module "static_hosting" {
 ```tf
 module "static_hosting" {
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "3.0.0"
+  version = "3.1.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -152,6 +152,7 @@ No modules.
 | <a name="input_apigw_stage"></a> [apigw\_stage](#input\_apigw\_stage) | Name of the API Gateway Rest Stage. | `string` | `"api"` | no |
 | <a name="input_apigw_throttling_burst_limit"></a> [apigw\_throttling\_burst\_limit](#input\_apigw\_throttling\_burst\_limit) | The throttling burst limit for the route. | `number` | `5` | no |
 | <a name="input_apigw_throttling_rate_limit"></a> [apigw\_throttling\_rate\_limit](#input\_apigw\_throttling\_rate\_limit) | The throttling rate limit for the route.. | `number` | `50` | no |
+| <a name="input_bucket_force_destroy"></a> [bucket\_force\_destroy](#input\_bucket\_force\_destroy) | Allow Terraform to destroy the bucket even if there are objects within. | `bool` | `false` | no |
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | S3 bucket name used to deploy the website resources on. If left empty, defaults to using the first domain as name. | `string` | `""` | no |
 | <a name="input_cf_custom_behaviors"></a> [cf\_custom\_behaviors](#input\_cf\_custom\_behaviors) | List of additional CloudFront behaviors. | <pre>list(object({<br>    target_origin_id           = string<br>    path_pattern               = string<br>    allowed_methods            = list(string)<br>    cached_methods             = list(string)<br>    compress                   = bool<br>    viewer_protocol_policy     = string<br>    cache_policy_id            = string<br>    origin_request_policy_id   = string<br>    response_headers_policy_id = string<br>  }))</pre> | `[]` | no |
 | <a name="input_cf_custom_origins"></a> [cf\_custom\_origins](#input\_cf\_custom\_origins) | List of additional custom origins for which to selectively route traffic to. | <pre>list(object({<br>    origin_id   = string<br>    domain_name = string<br>    custom_headers = list(object({<br>      name  = string<br>      value = string<br>    }))<br>    custom_origin_config = object({<br>      http_port              = number<br>      https_port             = number<br>      origin_protocol_policy = string<br>      origin_ssl_protocols   = list(string)<br>      origin_read_timeout    = number<br>    })<br>  }))</pre> | `[]` | no |
