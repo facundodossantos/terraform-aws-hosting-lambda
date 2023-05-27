@@ -11,9 +11,21 @@ resource "aws_s3_bucket" "bucket" {
   tags = var.tags
 }
 
+resource "aws_s3_bucket_ownership_controls" "bucket_ownership" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    object_ownership = var.bucket_object_ownership
+  }
+}
+
 resource "aws_s3_bucket_acl" "bucket_acl" {
+  count = var.bucket_object_ownership == "BucketOwnerEnforced" ? 0 : 1
+
   bucket = aws_s3_bucket.bucket.id
   acl    = "private"
+
+  depends_on = [aws_s3_bucket_ownership_controls.bucket_ownership]
 }
 
 resource "aws_s3_bucket_public_access_block" "bucket_public_access_block" {

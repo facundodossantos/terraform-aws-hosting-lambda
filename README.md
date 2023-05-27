@@ -7,7 +7,7 @@ AWS Simple Storage Service (S3) and AWS Lambda (optional).
 
 In order to use this module, you must:
  - **Have a completely static frontend.**  
-   I highly recommend using a static site generator like [GatsbyJS](https://gatsbyjs.com)
+   I highly recommend using a static site generator like [Astro](https://astro.build/), [GatsbyJS](https://gatsbyjs.com) or [Next.js](https://nextjs.org/).
 
  - **Manage your domain name via Route 53.**  
    Route 53 is used to automatically provision ACM certificates.
@@ -23,10 +23,10 @@ If no lambda parameters are specified, no lambda will be deployed.
 ```tf
 module "static_hosting" {
   # Alternatively, you may use
-  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v3.1.0"
+  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v4.0.0"
 
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "3.1.0"
+  version = "4.0.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -41,7 +41,7 @@ module "static_hosting" {
 ```tf
 module "static_hosting" {
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "3.1.0"
+  version = "4.0.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -98,16 +98,16 @@ resource "aws_s3_bucket_versioning" "bucket_versioning" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 4.3 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.1 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.5 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 4.3.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.1.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.0.1 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.5.1 |
 
 ## Modules
 
@@ -134,6 +134,7 @@ No modules.
 | [aws_route53_record.r53_domain_validation_record](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
 | [aws_s3_bucket.bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
 | [aws_s3_bucket_acl.bucket_acl](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_acl) | resource |
+| [aws_s3_bucket_ownership_controls.bucket_ownership](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls) | resource |
 | [aws_s3_bucket_policy.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
 | [aws_s3_bucket_public_access_block.bucket_public_access_block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
 | [aws_s3_bucket_versioning.bucket_versioning](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
@@ -154,6 +155,7 @@ No modules.
 | <a name="input_apigw_throttling_rate_limit"></a> [apigw\_throttling\_rate\_limit](#input\_apigw\_throttling\_rate\_limit) | The throttling rate limit for the route.. | `number` | `50` | no |
 | <a name="input_bucket_force_destroy"></a> [bucket\_force\_destroy](#input\_bucket\_force\_destroy) | Allow Terraform to destroy the bucket even if there are objects within. | `bool` | `false` | no |
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | S3 bucket name used to deploy the website resources on. If left empty, defaults to using the first domain as name. | `string` | `""` | no |
+| <a name="input_bucket_object_ownership"></a> [bucket\_object\_ownership](#input\_bucket\_object\_ownership) | S3 bucket ownership scheme. | `string` | `"BucketOwnerEnforced"` | no |
 | <a name="input_cf_custom_behaviors"></a> [cf\_custom\_behaviors](#input\_cf\_custom\_behaviors) | List of additional CloudFront behaviors. | <pre>list(object({<br>    target_origin_id           = string<br>    path_pattern               = string<br>    allowed_methods            = list(string)<br>    cached_methods             = list(string)<br>    compress                   = bool<br>    viewer_protocol_policy     = string<br>    cache_policy_id            = string<br>    origin_request_policy_id   = string<br>    response_headers_policy_id = string<br>  }))</pre> | `[]` | no |
 | <a name="input_cf_custom_origins"></a> [cf\_custom\_origins](#input\_cf\_custom\_origins) | List of additional custom origins for which to selectively route traffic to. | <pre>list(object({<br>    origin_id   = string<br>    domain_name = string<br>    custom_headers = list(object({<br>      name  = string<br>      value = string<br>    }))<br>    custom_origin_config = object({<br>      http_port              = number<br>      https_port             = number<br>      origin_protocol_policy = string<br>      origin_ssl_protocols   = list(string)<br>      origin_read_timeout    = number<br>    })<br>  }))</pre> | `[]` | no |
 | <a name="input_cf_lambda_cache_policy_id"></a> [cf\_lambda\_cache\_policy\_id](#input\_cf\_lambda\_cache\_policy\_id) | Cache Policy Id to apply to the Lambda cache behavior of the CloudFront distribution. Defaults to 'Managed-CachingDisabled' | `string` | `"4135ea2d-6df8-44a3-9df3-4b5a84be39ad"` | no |

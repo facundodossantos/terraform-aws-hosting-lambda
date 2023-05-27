@@ -31,6 +31,12 @@ variable "bucket_force_destroy" {
   default     = false
 }
 
+variable "bucket_object_ownership" {
+  description = "S3 bucket ownership scheme."
+  type        = string
+  default     = "BucketOwnerEnforced"
+}
+
 variable "index_document" {
   description = "Filename of the index document to be used in the bucket."
   type        = string
