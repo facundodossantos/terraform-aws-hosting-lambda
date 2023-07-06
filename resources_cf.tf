@@ -16,7 +16,7 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
   comment = "${local.main_domain} (Terraform Managed)"
   tags    = var.tags
 
-  price_class = "PriceClass_100"
+  price_class = var.cf_price_class
 
   aliases = var.domains
 
