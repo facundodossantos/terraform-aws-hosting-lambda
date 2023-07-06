@@ -23,10 +23,10 @@ If no lambda parameters are specified, no lambda will be deployed.
 ```tf
 module "static_hosting" {
   # Alternatively, you may use
-  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v4.0.0"
+  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v4.0.1"
 
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "4.0.0"
+  version = "4.0.1"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -41,7 +41,7 @@ module "static_hosting" {
 ```tf
 module "static_hosting" {
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "4.0.0"
+  version = "4.0.1"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
