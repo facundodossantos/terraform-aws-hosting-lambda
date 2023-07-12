@@ -1,12 +1,9 @@
 locals {
-  s3_origin_id             = var.cf_website_origin_id != "" ? var.cf_website_origin_id : "S3Website-${local.resolved_bucket_name}"
-  lambda_origin_id         = var.cf_lambda_origin_id != "" ? var.cf_lambda_origin_id : "Lambda-${local.resolved_lambda_function_name}"
-  resolved_cf_s3_secret_ua = var.cf_s3_secret_ua != "" ? var.cf_s3_secret_ua : "CloudFront_${random_uuid.random_uuid[0].result}"
-}
+  s3_origin_id     = var.cf_website_origin_id != "" ? var.cf_website_origin_id : "S3Website-${local.resolved_bucket_name}"
+  lambda_origin_id = var.cf_lambda_origin_id != "" ? var.cf_lambda_origin_id : "Lambda-${local.resolved_lambda_function_name}"
 
-# Secet Key (if needed)
-resource "random_uuid" "random_uuid" {
-  count = var.cf_s3_secret_ua == "" ? 1 : 0
+  resolved_cf_function_name = var.cf_function_name != "" ? var.cf_function_name : "${local.default_resource_prefix}-cf-func"
+  resolved_cf_oac_name      = var.cf_oac_name != "" ? var.cf_oac_name : "${local.default_resource_prefix}-cf-oac"
 }
 
 resource "aws_cloudfront_distribution" "cf_distribution" {
@@ -18,7 +15,24 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
 
   price_class = var.cf_price_class
 
+  web_acl_id = length(var.cf_waf_acl_id) > 0 ? var.cf_waf_acl_id : null
+
   aliases = var.domains
+
+  default_root_object = var.index_document
+
+  # AWS S3 returns a 403 if an object doesn't exist
+  custom_error_response {
+    error_code         = 403
+    response_code      = 404
+    response_page_path = "/${var.error_document}"
+  }
+
+  custom_error_response {
+    error_code         = 404
+    response_code      = 404
+    response_page_path = "/${var.error_document}"
+  }
 
   default_cache_behavior {
     allowed_methods = [
@@ -40,26 +54,18 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
     cache_policy_id            = var.cf_website_cache_policy_id
     origin_request_policy_id   = length(var.cf_website_origin_request_policy_id) > 0 ? var.cf_website_origin_request_policy_id : null
     response_headers_policy_id = length(var.cf_website_response_headers_policy_id) > 0 ? var.cf_website_response_headers_policy_id : null
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.cf_function.arn
+    }
   }
 
   origin {
     origin_id   = local.s3_origin_id
-    domain_name = aws_s3_bucket_website_configuration.bucket_website_configuration.website_endpoint
+    domain_name = aws_s3_bucket.bucket.bucket_regional_domain_name
 
-    custom_header {
-      name  = "User-Agent"
-      value = local.resolved_cf_s3_secret_ua
-    }
-
-    custom_origin_config {
-      http_port  = 80
-      https_port = 443
-
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols = [
-        "TLSv1.2"
-      ]
-    }
+    origin_access_control_id = aws_cloudfront_origin_access_control.cf_oac.id
   }
 
   dynamic "origin" {
@@ -181,4 +187,25 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
     minimum_protocol_version = var.cf_minimum_protocol_version
     ssl_support_method       = "sni-only"
   }
+}
+
+resource "aws_cloudfront_origin_access_control" "cf_oac" {
+  name        = local.resolved_cf_oac_name
+  description = "${local.main_domain} (Terraform Managed)"
+
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_function" "cf_function" {
+  name    = local.resolved_cf_function_name
+  comment = "${local.main_domain} (Terraform Managed)"
+
+  runtime = "cloudfront-js-1.0"
+  publish = true
+
+  code = templatefile("${path.module}/files/cf-function.js.tftpl", {
+    index_document = jsonencode(var.index_document)
+  })
 }

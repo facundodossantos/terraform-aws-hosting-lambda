@@ -36,9 +36,9 @@ output "cf_distribution_id" {
   value       = aws_cloudfront_distribution.cf_distribution.id
 }
 
-output "cf_s3_secret_ua" {
-  description = "Secret User-Agent used to prevent everyone but CloudFront from accessing the S3 Website Endpoint."
-  value       = local.resolved_cf_s3_secret_ua
+output "cf_function_arn" {
+  description = "The ARN of the CloudFront Function in charge of adding support for directory index documents."
+  value       = aws_cloudfront_function.cf_function.arn
 }
 
 # Lambda
@@ -67,9 +67,3 @@ output "s3_bucket_id" {
   description = "The ID of the S3 Bucket"
   value       = aws_s3_bucket.bucket.id
 }
-
-output "s3_bucket_website_endpoint" {
-  description = "The website endpoint associated with the S3 Bucket"
-  value       = aws_s3_bucket_website_configuration.bucket_website_configuration.website_endpoint
-}
-

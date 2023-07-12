@@ -31,10 +31,10 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
 resource "aws_s3_bucket_public_access_block" "bucket_public_access_block" {
   bucket = aws_s3_bucket.bucket.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_versioning" "bucket_versioning" {
@@ -45,36 +45,18 @@ resource "aws_s3_bucket_versioning" "bucket_versioning" {
   }
 }
 
-resource "aws_s3_bucket_website_configuration" "bucket_website_configuration" {
-  bucket = aws_s3_bucket.bucket.id
-
-  index_document {
-    suffix = var.index_document
-  }
-
-  error_document {
-    key = var.error_document
-  }
-
-  lifecycle {
-    ignore_changes = [
-      routing_rule,
-    ]
-  }
-}
-
 # Bucket Access Policy
 data "aws_iam_policy_document" "bucket_policy" {
   statement {
-    sid = "CloudFrontPublicRead"
+    sid = "CloudFrontOACRead"
 
     actions = [
       "s3:GetObject"
     ]
 
     principals {
-      identifiers = ["*"]
-      type        = "*"
+      identifiers = ["cloudfront.amazonaws.com"]
+      type        = "Service"
     }
 
     resources = [
@@ -83,19 +65,40 @@ data "aws_iam_policy_document" "bucket_policy" {
 
     condition {
       test     = "StringEquals"
-      variable = "aws:UserAgent"
-      values   = ["{bucket_access_key}"]
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.cf_distribution.arn]
+    }
+  }
+  statement {
+    sid    = "DenyInsecureTraffic"
+    effect = "Deny"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = ["s3:*"]
+
+    resources = [
+      "${aws_s3_bucket.bucket.arn}",
+      "${aws_s3_bucket.bucket.arn}/*"
+    ]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
     }
   }
 }
 
 resource "aws_s3_bucket_policy" "bucket_policy" {
   bucket = aws_s3_bucket.bucket.id
-  policy = replace(
-    data.aws_iam_policy_document.bucket_policy.json,
-    "\"{bucket_access_key}\"",
-    jsonencode(local.resolved_cf_s3_secret_ua)
-  ) # Workaround as a data cannot depend on a resource
+  policy = data.aws_iam_policy_document.bucket_policy.json
 
-  depends_on = [aws_s3_bucket_public_access_block.bucket_public_access_block]
+  depends_on = [
+    aws_s3_bucket_public_access_block.bucket_public_access_block,
+    aws_cloudfront_distribution.cf_distribution,
+  ]
 }

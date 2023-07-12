@@ -122,6 +122,18 @@ variable "cf_website_response_headers_policy_id" {
   default     = ""
 }
 
+variable "cf_function_name" {
+  description = "Name of the CloudFront Function in charge of adding support for directory index documents. If left empty, a value will be derived from the first domain name."
+  type        = string
+  default     = ""
+}
+
+variable "cf_oac_name" {
+  description = "Name of the CloudFront Origin Access Control. If left empty, a value will be derived from the first domain name."
+  type        = string
+  default     = ""
+}
+
 variable "cf_lambda_origin_id" {
   description = "CloudFront origin id that will be used for the origin pointing to the API gateway. Will be automatically generated if empty."
   type        = string
@@ -142,12 +154,6 @@ variable "cf_lambda_origin_request_policy_id" {
 
 variable "cf_lambda_response_headers_policy_id" {
   description = "Response Headers Policy Id to apply to the Lambda cache behavior of the CloudFront distribution. Defaults to none. Leave empty for none."
-  type        = string
-  default     = ""
-}
-
-variable "cf_s3_secret_ua" {
-  description = "Secret User-Agent used to prevent everyone but CloudFront from accessing the S3 Website Endpoint. If empty, a value will be automatically generated for you."
   type        = string
   default     = ""
 }
@@ -186,6 +192,12 @@ variable "cf_custom_behaviors" {
     response_headers_policy_id = string
   }))
   default = []
+}
+
+variable "cf_waf_acl_id" {
+  description = "Unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution."
+  type        = string
+  default     = ""
 }
 
 # AWS Lambda Variables
