@@ -151,7 +151,8 @@ No modules.
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_route[aws_apigatewayv2_route.lambda_route] |resource
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_stage[aws_apigatewayv2_stage.apigw_stage] |resource
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution[aws_cloudfront_distribution.cf_distribution] |resource
-|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_function[aws_cloudfront_function.cf_function] |resource
+|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_function[aws_cloudfront_function.cf_function_request] |resource
+|https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_function[aws_cloudfront_function.cf_function_response] |resource
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_origin_access_control[aws_cloudfront_origin_access_control.cf_oac] |resource
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group[aws_cloudwatch_log_group.cloudwatch_group] |resource
 |https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role[aws_iam_role.lambda_role] |resource
@@ -273,12 +274,6 @@ list(object({
 |`[]`
 |no
 
-|[[input_cf_function_name]] <<input_cf_function_name,cf_function_name>>
-|Name of the CloudFront Function in charge of adding support for directory index documents. If left empty, a value will be derived from the first domain name.
-|`string`
-|`""`
-|no
-
 |[[input_cf_lambda_cache_policy_id]] <<input_cf_lambda_cache_policy_id,cf_lambda_cache_policy_id>>
 |Cache Policy Id to apply to the Lambda cache behavior of the CloudFront distribution. Defaults to 'Managed-CachingDisabled'
 |`string`
@@ -345,6 +340,18 @@ object({
 |CloudFront Price Class
 |`string`
 |`"PriceClass_All"`
+|no
+
+|[[input_cf_request_function_name]] <<input_cf_request_function_name,cf_request_function_name>>
+|Name of the CloudFront Function in charge of adding support for directory index documents. If left empty, a value will be derived from the first domain name.
+|`string`
+|`""`
+|no
+
+|[[input_cf_response_function_name]] <<input_cf_response_function_name,cf_response_function_name>>
+|Name of the CloudFront Function in charge of supporting x-amz-website-redirect-location on objects. If left empty, a value will be derived from the first domain name.
+|`string`
+|`""`
 |no
 
 |[[input_cf_waf_acl_id]] <<input_cf_waf_acl_id,cf_waf_acl_id>>
@@ -545,7 +552,8 @@ object({
 |[[output_apigw_rest_api_invoke_url]] <<output_apigw_rest_api_invoke_url,apigw_rest_api_invoke_url>> |The URL to invoke the API pointing to the stage
 |[[output_cf_distribution_arn]] <<output_cf_distribution_arn,cf_distribution_arn>> |The ARN of the CloudFront distribution
 |[[output_cf_distribution_id]] <<output_cf_distribution_id,cf_distribution_id>> |The identifier of the CloudFront distribution
-|[[output_cf_function_arn]] <<output_cf_function_arn,cf_function_arn>> |The ARN of the CloudFront Function in charge of adding support for directory index documents.
+|[[output_cf_request_function_arn]] <<output_cf_request_function_arn,cf_request_function_arn>> |The ARN of the CloudFront Function in charge of adding support for directory index documents.
+|[[output_cf_response_function_arn]] <<output_cf_response_function_arn,cf_response_function_arn>> |The ARN of the CloudFront Function in charge of supporting x-amz-website-redirect-location on objects.
 |[[output_lambda_arn]] <<output_lambda_arn,lambda_arn>> |The ARN of the Lambda.
 |[[output_lambda_iam_role_arn]] <<output_lambda_iam_role_arn,lambda_iam_role_arn>> |The ARN of the Lambda's IAM role.
 |[[output_lambda_iam_role_id]] <<output_lambda_iam_role_id,lambda_iam_role_id>> |The ID of the Lambda's IAM role.

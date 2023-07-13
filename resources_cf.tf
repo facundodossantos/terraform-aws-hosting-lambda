@@ -2,8 +2,10 @@ locals {
   s3_origin_id     = var.cf_website_origin_id != "" ? var.cf_website_origin_id : "S3Website-${local.resolved_bucket_name}"
   lambda_origin_id = var.cf_lambda_origin_id != "" ? var.cf_lambda_origin_id : "Lambda-${local.resolved_lambda_function_name}"
 
-  resolved_cf_function_name = var.cf_function_name != "" ? var.cf_function_name : "${local.default_resource_prefix}-cf-func"
-  resolved_cf_oac_name      = var.cf_oac_name != "" ? var.cf_oac_name : "${local.default_resource_prefix}-cf-oac"
+  resolved_cf_request_function_name  = var.cf_request_function_name != "" ? var.cf_request_function_name : "${local.default_resource_prefix}-cf-reqfunc"
+  resolved_cf_response_function_name = var.cf_response_function_name != "" ? var.cf_response_function_name : "${local.default_resource_prefix}-cf-resfunc"
+
+  resolved_cf_oac_name = var.cf_oac_name != "" ? var.cf_oac_name : "${local.default_resource_prefix}-cf-oac"
 }
 
 resource "aws_cloudfront_distribution" "cf_distribution" {
@@ -57,7 +59,12 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
 
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.cf_function.arn
+      function_arn = aws_cloudfront_function.cf_function_request.arn
+    }
+
+    function_association {
+      event_type   = "viewer-response"
+      function_arn = aws_cloudfront_function.cf_function_response.arn
     }
   }
 
@@ -198,14 +205,24 @@ resource "aws_cloudfront_origin_access_control" "cf_oac" {
   signing_protocol                  = "sigv4"
 }
 
-resource "aws_cloudfront_function" "cf_function" {
-  name    = local.resolved_cf_function_name
-  comment = "${local.main_domain} (Terraform Managed)"
+resource "aws_cloudfront_function" "cf_function_request" {
+  name    = local.resolved_cf_request_function_name
+  comment = "${local.main_domain} Viewer Request Function (Terraform Managed)"
 
   runtime = "cloudfront-js-1.0"
   publish = true
 
-  code = templatefile("${path.module}/files/cf-function.js.tftpl", {
+  code = templatefile("${path.module}/files/cf-func-request.js.tftpl", {
     index_document = jsonencode(var.index_document)
   })
+}
+
+resource "aws_cloudfront_function" "cf_function_response" {
+  name    = local.resolved_cf_response_function_name
+  comment = "${local.main_domain} Viewer Response Function (Terraform Managed)"
+
+  runtime = "cloudfront-js-1.0"
+  publish = true
+
+  code = file("${path.module}/files/cf-func-response.js")
 }

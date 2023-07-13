@@ -36,9 +36,14 @@ output "cf_distribution_id" {
   value       = aws_cloudfront_distribution.cf_distribution.id
 }
 
-output "cf_function_arn" {
+output "cf_request_function_arn" {
   description = "The ARN of the CloudFront Function in charge of adding support for directory index documents."
-  value       = aws_cloudfront_function.cf_function.arn
+  value       = aws_cloudfront_function.cf_function_request.arn
+}
+
+output "cf_response_function_arn" {
+  description = "The ARN of the CloudFront Function in charge of supporting x-amz-website-redirect-location on objects."
+  value       = aws_cloudfront_function.cf_function_response.arn
 }
 
 # Lambda

@@ -122,8 +122,14 @@ variable "cf_website_response_headers_policy_id" {
   default     = ""
 }
 
-variable "cf_function_name" {
+variable "cf_request_function_name" {
   description = "Name of the CloudFront Function in charge of adding support for directory index documents. If left empty, a value will be derived from the first domain name."
+  type        = string
+  default     = ""
+}
+
+variable "cf_response_function_name" {
+  description = "Name of the CloudFront Function in charge of supporting x-amz-website-redirect-location on objects. If left empty, a value will be derived from the first domain name."
   type        = string
   default     = ""
 }
