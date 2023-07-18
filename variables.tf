@@ -37,6 +37,12 @@ variable "bucket_object_ownership" {
   default     = "BucketOwnerEnforced"
 }
 
+variable "bucket_override_policy_documents" {
+  description = "S3 bucket override policy documents (in JSON)."
+  type        = list(string)
+  default     = []
+}
+
 variable "index_document" {
   description = "Filename of the index document to be used in the bucket."
   type        = string

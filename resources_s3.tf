@@ -91,6 +91,8 @@ data "aws_iam_policy_document" "bucket_policy" {
       values   = ["false"]
     }
   }
+
+  override_policy_documents = var.bucket_override_policy_documents
 }
 
 resource "aws_s3_bucket_policy" "bucket_policy" {

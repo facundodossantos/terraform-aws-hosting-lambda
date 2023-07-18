@@ -43,10 +43,10 @@ CloudFront doesn't support custom error pages per origin, and instead applies re
 ----
 module "static_hosting" {
   # Alternatively, you may use
-  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v5.0.0"
+  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v5.1.0"
 
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "5.0.0"
+  version = "5.1.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -62,7 +62,7 @@ module "static_hosting" {
 ----
 module "static_hosting" {
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "5.0.0"
+  version = "5.1.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -224,6 +224,12 @@ No modules.
 |S3 bucket ownership scheme.
 |`string`
 |`"BucketOwnerEnforced"`
+|no
+
+|[[input_bucket_override_policy_documents]] <<input_bucket_override_policy_documents,bucket_override_policy_documents>>
+|S3 bucket override policy documents (in JSON).
+|`list(string)`
+|`[]`
 |no
 
 |[[input_cf_custom_behaviors]] <<input_cf_custom_behaviors,cf_custom_behaviors>>
