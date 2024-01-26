@@ -43,10 +43,10 @@ CloudFront doesn't support custom error pages per origin, and instead applies re
 ----
 module "static_hosting" {
   # Alternatively, you may use
-  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v6.0.0"
+  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v6.1.0"
 
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "6.0.0"
+  version = "6.1.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -62,7 +62,7 @@ module "static_hosting" {
 ----
 module "static_hosting" {
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "6.0.0"
+  version = "6.1.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -248,6 +248,11 @@ list(object({
     cache_policy_id            = optional(string, "")
     origin_request_policy_id   = optional(string, "")
     response_headers_policy_id = optional(string, "")
+    apply_s3_functions         = optional(bool, false)
+    function_association = optional(list(object({
+      event_type   = string
+      function_arn = string
+    })), [])
   }))
 ----
 

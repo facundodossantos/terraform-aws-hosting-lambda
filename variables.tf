@@ -200,6 +200,11 @@ variable "cf_custom_behaviors" {
     cache_policy_id            = optional(string, "")
     origin_request_policy_id   = optional(string, "")
     response_headers_policy_id = optional(string, "")
+    apply_s3_functions         = optional(bool, false)
+    function_association = optional(list(object({
+      event_type   = string
+      function_arn = string
+    })), [])
   }))
   default = []
 }

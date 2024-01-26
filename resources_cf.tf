@@ -177,6 +177,21 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
       cache_policy_id            = ordered_cache_behavior.value.cache_policy_id
       origin_request_policy_id   = length(ordered_cache_behavior.value.origin_request_policy_id) > 0 ? ordered_cache_behavior.value.origin_request_policy_id : null
       response_headers_policy_id = length(ordered_cache_behavior.value.response_headers_policy_id) > 0 ? ordered_cache_behavior.value.response_headers_policy_id : null
+
+      dynamic "function_association" {
+        for_each = ordered_cache_behavior.value.apply_s3_functions == true ? [{
+          event_type   = "viewer-request"
+          function_arn = aws_cloudfront_function.cf_function_request.arn
+          }, {
+          event_type   = "viewer-response"
+          function_arn = aws_cloudfront_function.cf_function_response.arn
+        }] : ordered_cache_behavior.value.function_association
+
+        content {
+          event_type   = function_association.value.event_type
+          function_arn = function_association.value.function_arn
+        }
+      }
     }
   }
 
