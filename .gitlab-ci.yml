@@ -5,7 +5,7 @@ stages:
 lint:
   stage: lint
   image:
-    name: hashicorp/terraform:1.4.6
+    name: hashicorp/terraform:1.7.1
     entrypoint: [/bin/sh, -c]
   interruptible: true
   script:

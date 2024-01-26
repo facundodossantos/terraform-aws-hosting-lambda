@@ -99,9 +99,12 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
   dynamic "origin" {
     for_each = toset(var.cf_custom_origins)
     content {
-      origin_id = origin.value.origin_id
+      origin_id   = origin.value.origin_id
+      origin_path = length(origin.value.origin_path) > 0 ? origin.value.origin_path : null
 
       domain_name = origin.value.domain_name
+
+      origin_access_control_id = length(origin.value.origin_access_control_id) > 0 ? (origin.value.origin_access_control_id == "self" ? aws_cloudfront_origin_access_control.cf_oac.id : origin.value.origin_access_control_id) : null
 
       dynamic "custom_header" {
         for_each = toset(origin.value.custom_headers)
@@ -111,14 +114,18 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
         }
       }
 
-      custom_origin_config {
-        http_port  = origin.value.custom_origin_config.http_port
-        https_port = origin.value.custom_origin_config.https_port
+      dynamic "custom_origin_config" {
+        for_each = origin.value.custom_origin_config != null ? ["custom_origin_config"] : []
 
-        origin_protocol_policy = origin.value.custom_origin_config.origin_protocol_policy
-        origin_ssl_protocols   = origin.value.custom_origin_config.origin_ssl_protocols
+        content {
+          http_port  = origin.value.custom_origin_config.http_port
+          https_port = origin.value.custom_origin_config.https_port
 
-        origin_read_timeout = origin.value.custom_origin_config.origin_read_timeout
+          origin_protocol_policy = origin.value.custom_origin_config.origin_protocol_policy
+          origin_ssl_protocols   = origin.value.custom_origin_config.origin_ssl_protocols
+
+          origin_read_timeout = origin.value.custom_origin_config.origin_read_timeout
+        }
       }
     }
   }

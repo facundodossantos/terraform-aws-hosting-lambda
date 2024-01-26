@@ -43,10 +43,10 @@ CloudFront doesn't support custom error pages per origin, and instead applies re
 ----
 module "static_hosting" {
   # Alternatively, you may use
-  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v5.1.0"
+  # source = "git::https://gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting.git?ref=v6.0.0"
 
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "5.1.0"
+  version = "6.0.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -62,7 +62,7 @@ module "static_hosting" {
 ----
 module "static_hosting" {
   source = "gitlab.com/finewolf-projects/terraform-aws-lightweight-hosting/aws"
-  version = "5.1.0"
+  version = "6.0.0"
 
   domains  = ["example.org", "www.example.org"]
   zone_ids = ["Z00000000000000000000", "Z00000000000000000000"]
@@ -123,8 +123,8 @@ resource "aws_s3_bucket_versioning" "bucket_versioning" {
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Version
-|[[requirement_terraform]] <<requirement_terraform,terraform>> |>= 1.4
-|[[requirement_aws]] <<requirement_aws,aws>> |~> 5.0
+|[[requirement_terraform]] <<requirement_terraform,terraform>> |>= 1.7
+|[[requirement_aws]] <<requirement_aws,aws>> |~> 5.34
 |===
 
 == Providers
@@ -132,7 +132,7 @@ resource "aws_s3_bucket_versioning" "bucket_versioning" {
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Version
-|[[provider_aws]] <<provider_aws,aws>> |5.7.0
+|[[provider_aws]] <<provider_aws,aws>> |5.34.0
 |===
 
 == Modules
@@ -243,11 +243,11 @@ list(object({
     path_pattern               = string
     allowed_methods            = list(string)
     cached_methods             = list(string)
-    compress                   = bool
+    compress                   = optional(bool, false)
     viewer_protocol_policy     = string
-    cache_policy_id            = string
-    origin_request_policy_id   = string
-    response_headers_policy_id = string
+    cache_policy_id            = optional(string, "")
+    origin_request_policy_id   = optional(string, "")
+    response_headers_policy_id = optional(string, "")
   }))
 ----
 
@@ -262,18 +262,20 @@ list(object({
 ----
 list(object({
     origin_id   = string
+    origin_path = optional(string, "")
     domain_name = string
-    custom_headers = list(object({
+    custom_headers = optional(list(object({
       name  = string
       value = string
-    }))
-    custom_origin_config = object({
+    })), [])
+    custom_origin_config = optional(object({
       http_port              = number
       https_port             = number
       origin_protocol_policy = string
       origin_ssl_protocols   = list(string)
       origin_read_timeout    = number
-    })
+    }))
+    origin_access_control_id = optional(string, "")
   }))
 ----
 
@@ -311,23 +313,13 @@ list(object({
 [source]
 ----
 object({
-    bucket          = string
-    include_cookies = bool
-    prefix          = string
+    bucket          = optional(string)
+    include_cookies = optional(bool, false)
+    prefix          = optional(string)
   })
 ----
 
-|
-
-[source]
-----
-{
-  "bucket": "",
-  "include_cookies": false,
-  "prefix": ""
-}
-----
-
+|`{}`
 |no
 
 |[[input_cf_minimum_protocol_version]] <<input_cf_minimum_protocol_version,cf_minimum_protocol_version>>
@@ -445,25 +437,14 @@ object({
 [source]
 ----
 object({
-    image_uri         = string
-    command           = list(string)
-    entry_point       = list(string)
-    working_directory = string
+    image_uri         = optional(string, "")
+    command           = optional(list(string), [])
+    entry_point       = optional(list(string), [])
+    working_directory = optional(string, "")
   })
 ----
 
-|
-
-[source]
-----
-{
-  "command": [],
-  "entry_point": [],
-  "image_uri": "",
-  "working_directory": ""
-}
-----
-
+|`{}`
 |no
 
 |[[input_lambda_log_retention]] <<input_lambda_log_retention,lambda_log_retention>>
@@ -485,27 +466,15 @@ object({
 [source]
 ----
 object({
-    filename  = string
-    runtime   = string
-    handler   = string
-    s3_bucket = string
-    s3_key    = string
+    filename  = optional(string, "")
+    runtime   = optional(string, "provided")
+    handler   = optional(string, "")
+    s3_bucket = optional(string, "")
+    s3_key    = optional(string, "")
   })
 ----
 
-|
-
-[source]
-----
-{
-  "filename": "",
-  "handler": "",
-  "runtime": "provided",
-  "s3_bucket": "",
-  "s3_key": ""
-}
-----
-
+|`{}`
 |no
 
 |[[input_lambda_role_name]] <<input_lambda_role_name,lambda_role_name>>

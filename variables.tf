@@ -81,15 +81,11 @@ variable "is_ipv6_enabled" {
 variable "cf_logging_config" {
   description = "Provides logging configuration for the CloudFront distribution"
   type = object({
-    bucket          = string
-    include_cookies = bool
-    prefix          = string
+    bucket          = optional(string)
+    include_cookies = optional(bool, false)
+    prefix          = optional(string)
   })
-  default = {
-    bucket          = ""
-    include_cookies = false
-    prefix          = ""
-  }
+  default = {}
 }
 
 variable "cf_price_class" {
@@ -174,18 +170,20 @@ variable "cf_custom_origins" {
   description = "List of additional custom origins for which to selectively route traffic to."
   type = list(object({
     origin_id   = string
+    origin_path = optional(string, "")
     domain_name = string
-    custom_headers = list(object({
+    custom_headers = optional(list(object({
       name  = string
       value = string
-    }))
-    custom_origin_config = object({
+    })), [])
+    custom_origin_config = optional(object({
       http_port              = number
       https_port             = number
       origin_protocol_policy = string
       origin_ssl_protocols   = list(string)
       origin_read_timeout    = number
-    })
+    }))
+    origin_access_control_id = optional(string, "")
   }))
   default = []
 }
@@ -197,11 +195,11 @@ variable "cf_custom_behaviors" {
     path_pattern               = string
     allowed_methods            = list(string)
     cached_methods             = list(string)
-    compress                   = bool
+    compress                   = optional(bool, false)
     viewer_protocol_policy     = string
-    cache_policy_id            = string
-    origin_request_policy_id   = string
-    response_headers_policy_id = string
+    cache_policy_id            = optional(string, "")
+    origin_request_policy_id   = optional(string, "")
+    response_headers_policy_id = optional(string, "")
   }))
   default = []
 }
@@ -240,35 +238,24 @@ variable "lambda_architectures" {
 variable "lambda_image_config" {
   description = "If using a container Lambda, provides image configuration options"
   type = object({
-    image_uri         = string
-    command           = list(string)
-    entry_point       = list(string)
-    working_directory = string
+    image_uri         = optional(string, "")
+    command           = optional(list(string), [])
+    entry_point       = optional(list(string), [])
+    working_directory = optional(string, "")
   })
-  default = {
-    image_uri         = ""
-    command           = []
-    entry_point       = []
-    working_directory = ""
-  }
+  default = {}
 }
 
 variable "lambda_package_config" {
   description = "If using a traditional Lambda, provides runtime and package options"
   type = object({
-    filename  = string
-    runtime   = string
-    handler   = string
-    s3_bucket = string
-    s3_key    = string
+    filename  = optional(string, "")
+    runtime   = optional(string, "provided")
+    handler   = optional(string, "")
+    s3_bucket = optional(string, "")
+    s3_key    = optional(string, "")
   })
-  default = {
-    filename  = ""
-    s3_bucket = ""
-    s3_key    = ""
-    runtime   = "provided"
-    handler   = ""
-  }
+  default = {}
 }
 
 variable "lambda_memory_size" {
