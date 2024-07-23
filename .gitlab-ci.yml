@@ -2,10 +2,10 @@ stages:
   - lint
   - upload
 
-lint:
+lint:terraform:
   stage: lint
   image:
-    name: hashicorp/terraform:1.7.1
+    name: hashicorp/terraform:1.7.5
     entrypoint: [/bin/sh, -c]
   interruptible: true
   script:
@@ -27,11 +27,38 @@ lint:
     - terraform init -input=false -backend=false
     - terraform validate
 
+lint:opentofu:
+  stage: lint
+  image:
+    name: ghcr.io/opentofu/opentofu:1.7.3
+    entrypoint: [/bin/sh, -c]
+  interruptible: true
+  script:
+    - tofu -version
+    - mkdir .temp
+    - >-
+      find . -type f \( -name '*.tf' -or -name '*.tfvars' \) | \
+        while read tffile; do
+          (cd "${tffile%/*}" && tofu fmt -check "${tffile##*/}" 1>/dev/null) || echo "$tffile"
+        done > '.temp/tofulint-report.txt'
+    - >-
+      if [ -s '.temp/tofulint-report.txt' ]; then
+        echo "Please run 'tofu fmt' on the following files: " 1>&2;
+        cat '.temp/tofulint-report.txt' 1>&2;
+        exit 1;
+      else
+        echo "All files pass linting.";
+      fi
+    - tofu init -input=false -backend=false
+    - tofu validate
+
 upload:
   stage: upload
   image: curlimages/curl:latest
   needs:
-    - job: lint
+    - job: lint:terraform
+      artifacts: false
+    - job: lint:opentofu
       artifacts: false
   interruptible: false
   variables:

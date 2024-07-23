@@ -17,6 +17,12 @@ In order to use this module, you must:
 
 If no lambda parameters are specified, no lambda will be deployed.
 
+[NOTE] 
+.OpenTofu Support
+==== 
+This module supports both Terraform and OpenTofu.
+====
+
 [WARNING] 
 .Files without any extensions
 ==== 
