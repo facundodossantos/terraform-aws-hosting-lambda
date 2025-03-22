@@ -196,7 +196,7 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
   }
 
 dynamic "logging_config" {
-  for_each = coalesce(var.cf_logging_config.bucket, "") != "" ? ["logging_config"] : []
+  for_each = lookup(var.cf_logging_config, "bucket", "") != "" ? ["logging_config"] : []
   content {
     bucket         = "${var.cf_logging_config.bucket}.s3.amazonaws.com"
     prefix         = var.cf_logging_config.prefix != "" ? var.cf_logging_config.prefix : null
